@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Demo: USB</title>
+
+	<link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.css">
+
+	<script src="../build/globals/usb.js"></script>
+
+	<style>
+		li.connected {
+			color: green;
+		}
+		.matrix {
+			margin: 20px auto;
+		}
+		.led {
+			border: 1px solid;
+			border-radius: 20px;
+			width: 40px;
+			height: 40px;
+			margin: 10px;
+		}
+	</style>
+</head>
+<body>
+	<div class="col-md-12">
+		<div>Status: <span id="status"></span></div>
+		<ul id="devicesList"></ul>
+		<button id="requestDeviceBtn">Request Device</button>
+	</div>
+	<script type="text/javascript">
+		const createEmptyMatrix = (rows, columns) => {
+			const data = { rows: [] };
+			for (let i = 0; i < rows; i++) {
+				const cols = [];
+				for (let i = 0; i < columns; i++) {
+					cols.push({
+						r: 0, g: 0, b: 0
+					})
+				}
+				data.rows.push(cols);
+			}
+
+			return data;
+		}
+
+		const matrix = new metal.LedMatrix({
+			data: createEmptyMatrix(10, 10)
+		});
+
+		const statusElement = document.querySelector('#status');
+		const requestDeviceBtn = document.querySelector('#requestDeviceBtn');
+		requestDeviceBtn.addEventListener('click', () => {
+			const promise = metal.Usb.requestDevice({
+				filters: [
+					// { 'vendorId': 0x046d }, // Logitech
+					// { 'vendorId': 0x05ac }, // Apple
+					{ 'vendorId': 0x2341 }, // Arduino,
+					{ 'vendorId': 0x1a86 }
+				]
+			});
+			promise.then((device) => {
+				if (device) {
+					matrix.connectToDevice(device);
+				}
+			});
+		});
+
+		metal.Usb.onConnect((event) => {
+			console.log('Conncted:', event);
+		});
+
+		var promise = metal.Usb.getDevices();
+		promise.then(function(devices) {
+			console.log(devices);
+			devices.forEach(function(device) {
+				var deviceNode = document.createElement('li');
+				deviceNode.innerHTML = device.getName();
+				if (device.getProperty('vendorId') === 0x2341) {
+					deviceNode.classList.add('connected');
+					matrix.connectToDevice(device);
+				}
+				document.querySelector('#devicesList').appendChild(deviceNode);
+			});
+		});
+	</script>
+</body>
+</html>

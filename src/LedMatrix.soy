@@ -1,0 +1,30 @@
+{namespace LedMatrix}
+
+/**
+ * LED Matrix
+ **/
+{template .render}
+    {@param data : [
+        rows: list<list<[
+            r: int,
+            g: int,
+            b: int
+        ]>>
+    ]}
+    <div>
+        <table class="matrix">
+            {foreach $column in $data.rows}
+                <tr>
+                    {foreach $led in $column}
+                        <td>
+                            <div data-row="{index($column)}" data-column="{index($led)}" data-onclick="onClickLed" class="led" style="background: rgb({$led.r},{$led.g},{$led.b});"></div>
+                        </td>
+                    {/foreach}
+                </tr>
+            {/foreach}
+        </table>
+        <label>Intensity</label>
+        <input data-oninput="updateIntensity" class="intensity" value="255" />
+        <button data-onclick="clear">Clear</button>
+    </div>
+{/template}
